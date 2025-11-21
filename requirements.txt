@@ -1,0 +1,6 @@
+fastapi==0.88.0
+uvicorn==0.20.0
+sqlalchemy==1.4.49
+requests==2.28.2
+pydantic==1.10.7
+python-dotenv==1.0.0
