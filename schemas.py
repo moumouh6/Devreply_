@@ -1,24 +1,45 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 from datetime import datetime
 
-class EntryBase(BaseModel):
+
+class EntryCreate(BaseModel):
     title: str
     content: str
-    tags: List[str]
+    tags: List[str] = []
 
-class EntryCreate(EntryBase):
-    pass
+    @field_validator("title", "content")
+    @classmethod
+    def must_not_be_blank(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Field must not be blank")
+        return v.strip()
 
-class Entry(EntryBase):
+
+class EntryResponse(BaseModel):
     id: int
+    title: str
+    content: str
     summary: str
     tip: str
+    tags: List[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
-class EntryFilter(BaseModel):
-    tag: Optional[str] = None
-    keyword: Optional[str] = None 
+    @classmethod
+    def from_orm_entry(cls, entry) -> "EntryResponse":
+        tags = [t.strip() for t in entry.tags.split(",") if t.strip()] if entry.tags else []
+        return cls(
+            id=entry.id,
+            title=entry.title,
+            content=entry.content,
+            summary=entry.summary,
+            tip=entry.tip,
+            tags=tags,
+            created_at=entry.created_at,
+        )
+
+
+class AIResponse(BaseModel):
+    answer: str
